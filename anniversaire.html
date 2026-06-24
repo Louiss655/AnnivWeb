@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pour Victoire &#10024;</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --rose: #F2CACC; --bordeaux: #8B2252; --creme: #FDF6F0;
+  --or: #C9973A; --mauve: #6B5B6E; --blanc: #FFFFFF;
+}
+
+/* ─── BG CANVAS ─── */
+#bg-canvas {
+  position: fixed; top:0; left:0; width:100vw; height:100vh;
+  pointer-events:none; z-index:0;
+}
+
+body {
+  font-family: Lato, sans-serif;
+  background: linear-gradient(160deg, #1a0a10 0%, #2d1020 40%, #1a1030 100%);
+  min-height: 100vh; overflow-x: hidden;
+  position: relative;
+}
+
+/* All content above canvas */
+header, .card, #confirmation, #lock-screen { position: relative; z-index: 1; }
+
+/* ─── LOCK SCREEN ─── */
+#lock-screen {
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+}
+.lock-card {
+  background: rgba(253,246,240,.06);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(242,202,204,.2);
+  border-radius: 28px;
+  padding: 48px 40px;
+  max-width: 400px; width: 100%;
+  box-shadow: 0 20px 60px rgba(0,0,0,.4);
+}
+.lock-icon {
+  font-size: 3rem; margin-bottom: 16px; display: block;
+  animation: floatIcon 3s ease-in-out infinite;
+}
+@keyframes floatIcon { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+.lock-title {
+  font-family: Playfair Display, serif;
+  font-size: 1.6rem; color: #f8d7da; margin-bottom: 6px;
+}
+.lock-sub { color: rgba(242,202,204,.6); font-size:.88rem; font-weight:300; margin-bottom:28px; }
+
+.code-inputs {
+  display: flex; gap: 10px; justify-content: center; margin-bottom: 20px;
+}
+.code-input {
+  width: 52px; height: 60px;
+  background: rgba(255,255,255,.07);
+  border: 1.5px solid rgba(242,202,204,.3);
+  border-radius: 12px;
+  text-align: center;
+  font-family: Playfair Display, serif;
+  font-size: 1.6rem;
+  color: #f8d7da;
+  outline: none;
+  transition: all .2s;
+  text-transform: uppercase;
+  caret-color: var(--rose);
+}
+.code-input:focus {
+  border-color: var(--rose);
+  background: rgba(242,202,204,.1);
+  box-shadow: 0 0 0 3px rgba(242,202,204,.15);
+}
+.code-input.filled { border-color: rgba(242,202,204,.6); }
+.code-input.error { border-color: #e74c3c; animation: shake .4s ease; }
+@keyframes shake {
+  0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-6px)} 40%,80%{transform:translateX(6px)}
+}
+
+.lock-hint { font-size:.78rem; color:rgba(242,202,204,.35); font-style:italic; margin-top: 8px; }
+.lock-err { color:#e74c3c; font-size:.82rem; margin-top:8px; display:none; height:18px; }
+
+/* ─── MAIN APP (hidden until unlocked) ─── */
+#main-app { display: none; }
+
+/* ─── HEADER ─── */
+header {
+  text-align: center;
+  padding: 48px 24px 28px;
+}
+.eyebrow {
+  font-weight:300; letter-spacing:.22em; font-size:.72rem;
+  color: var(--or); text-transform:uppercase; margin-bottom:10px;
+}
+header h1 {
+  font-family: Playfair Display, serif;
+  font-size: clamp(1.8rem, 5.5vw, 3rem);
+  color: #f8d7da; line-height:1.18;
+}
+header h1 em { font-style:italic; color: var(--rose); }
+.subtitle { margin-top:12px; color:rgba(242,202,204,.65); font-weight:300; font-size:.95rem; }
+.divider { width:60px; height:1px; background:linear-gradient(90deg,transparent,var(--or),transparent); margin:22px auto 0; }
+
+/* ─── CHRONO ─── */
+#chrono-wrap {
+  max-width:520px; margin: 0 auto 32px; padding: 0 20px;
+}
+.chrono-card {
+  background: rgba(139,34,82,.15);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(242,202,204,.2);
+  border-radius: 18px;
+  padding: 18px 24px;
+  display: flex; align-items: center; gap: 16px;
+  box-shadow: 0 4px 20px rgba(139,34,82,.2);
+}
+.chrono-icon { font-size:1.5rem; }
+.chrono-text { flex:1; }
+.chrono-label { font-size:.68rem; color:var(--or); letter-spacing:.12em; text-transform:uppercase; margin-bottom:4px; }
+.chrono-digits {
+  font-family: Playfair Display, serif;
+  font-size:1.1rem; color:#f8d7da;
+  display:flex; gap:6px; flex-wrap:wrap;
+}
+.chrono-unit { text-align:center; }
+.chrono-num { font-size:1.5rem; font-weight:700; display:block; line-height:1; }
+.chrono-sep { font-size:1.2rem; opacity:.5; align-self:center; padding-bottom:2px; }
+.chrono-uname { font-size:.58rem; opacity:.6; letter-spacing:.06em; }
+
+/* ─── CARD / FORM ─── */
+.card { max-width:680px; margin:0 auto 60px; padding:0 20px; }
+.form-card {
+  background: rgba(253,246,240,.06);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(242,202,204,.15);
+  border-radius: 20px; padding: 40px 36px;
+  box-shadow: 0 8px 40px rgba(0,0,0,.25);
+  position: relative; overflow: hidden;
+}
+.form-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:3px;
+  background: linear-gradient(90deg, var(--rose), var(--bordeaux), var(--or));
+}
+
+.field { margin-bottom: 28px; }
+.field label {
+  display:block; font-family: Playfair Display, serif;
+  font-size:.92rem; color: #f0c0c8; margin-bottom:8px; font-weight:700;
+}
+.field label span {
+  font-weight:300; font-style:italic; color:rgba(242,202,204,.5);
+  font-family:Lato,sans-serif; font-size:.8rem;
+}
+
+/* Pills */
+.pills { display:flex; flex-wrap:wrap; gap:9px; }
+.pill {
+  display:flex; align-items:center; gap:6px; padding:8px 16px;
+  border:1px solid rgba(242,202,204,.25); border-radius:40px;
+  font-size:.86rem; color:rgba(242,202,204,.7); cursor:pointer;
+  background:rgba(255,255,255,.04); transition:all .2s; user-select:none;
+}
+.pill:hover { border-color:rgba(242,202,204,.6); color:#f8d7da; }
+.pill.active {
+  background:var(--bordeaux); border-color:var(--bordeaux);
+  color:white; box-shadow:0 4px 14px rgba(139,34,82,.4);
+}
+
+/* Surprise box */
+.surprise-box {
+  display:none; margin-top:16px;
+  background:rgba(139,34,82,.15);
+  border:1px dashed rgba(242,202,204,.4);
+  border-radius:14px; padding:18px 20px; text-align:center;
+  animation: popIn .4s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes popIn { from{opacity:0;transform:scale(.92)} to{opacity:1;transform:none} }
+.check-icon { font-size:2rem; margin-bottom:6px; display:block; }
+.ok-text { font-family: Playfair Display, serif; font-size:1.1rem; color:#f8d7da; font-weight:700; margin-bottom:4px; }
+.ok-sub { font-size:.83rem; color:rgba(242,202,204,.6); font-weight:300; font-style:italic; }
+
+/* Select */
+select {
+  width:100%; appearance:none;
+  background:rgba(255,255,255,.06) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%23F2CACC' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 16px center;
+  border:1px solid rgba(242,202,204,.25); border-radius:12px;
+  padding:13px 42px 13px 16px;
+  font-family:Lato,sans-serif; font-size:.93rem; color:rgba(242,202,204,.8);
+  cursor:pointer; transition:border-color .2s;
+}
+select:focus { outline:none; border-color:rgba(242,202,204,.6); }
+select option { background:#2d1020; color:#f8d7da; }
+
+/* CTA button */
+.btn {
+  width:100%; padding:15px;
+  background:linear-gradient(135deg, var(--bordeaux), #B03070);
+  color:white; border:none; border-radius:14px;
+  font-family: Playfair Display, serif; font-size:1rem; font-style:italic;
+  cursor:pointer; letter-spacing:.04em; transition:all .25s;
+  box-shadow:0 6px 20px rgba(139,34,82,.4);
+}
+.btn:hover { transform:translateY(-2px); box-shadow:0 10px 28px rgba(139,34,82,.5); }
+
+/* ─── CONFIRMATION ─── */
+#confirmation {
+  display:none; max-width:680px; margin:0 auto 60px; padding:0 20px; text-align:center;
+}
+.envelope {
+  width:200px; height:140px; margin:0 auto 32px; position:relative;
+  animation:floatEnv 3s ease-in-out infinite;
+}
+@keyframes floatEnv { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+.env-body {
+  width:100%; height:100%;
+  background:linear-gradient(135deg,#fce4ec,#f8bbd0);
+  border-radius:4px 4px 10px 10px;
+  box-shadow:0 10px 30px rgba(139,34,82,.3);
+  position:relative; overflow:hidden;
+}
+.env-flap {
+  width:0; height:0;
+  border-left:100px solid transparent; border-right:100px solid transparent;
+  border-top:70px solid #F48FB1;
+  position:absolute; top:0; left:0; transform-origin:top center;
+  animation:openFlap 1.2s ease forwards .3s; z-index:2;
+}
+@keyframes openFlap { 0%{transform:rotateX(0)} 100%{transform:rotateX(-180deg)} }
+.env-bl { position:absolute; bottom:0; left:0; width:0; height:0; border-bottom:70px solid #F06292; border-right:100px solid transparent; }
+.env-br { position:absolute; bottom:0; right:0; width:0; height:0; border-bottom:70px solid #EC407A; border-left:100px solid transparent; }
+.seal { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:36px; height:36px; background:var(--bordeaux); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1rem; color:white; z-index:3; box-shadow:0 2px 8px rgba(0,0,0,.3); }
+
+.letter-card {
+  background:rgba(253,246,240,.08); backdrop-filter:blur(20px);
+  border:1px solid rgba(242,202,204,.2); border-radius:20px;
+  padding:40px 36px; box-shadow:0 8px 40px rgba(0,0,0,.3);
+  position:relative; overflow:hidden;
+  animation:riseIn .8s cubic-bezier(.34,1.56,.64,1) both .9s;
+}
+@keyframes riseIn { from{opacity:0;transform:translateY(30px) scale(.95)} to{opacity:1;transform:none} }
+.letter-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--rose),var(--bordeaux),var(--or)); }
+.letter-card h2 { font-family: Playfair Display, serif; font-size:1.6rem; color:#f8d7da; margin-bottom:10px; }
+.heart { font-size:2rem; animation:heartbeat 1.4s ease infinite; display:block; margin-bottom:8px; }
+@keyframes heartbeat { 0%,100%{transform:scale(1)} 14%{transform:scale(1.2)} 28%{transform:scale(1)} 42%{transform:scale(1.15)} }
+
+.summary-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:24px 0; text-align:left; }
+.summary-item { background:rgba(139,34,82,.15); border-radius:12px; padding:12px 14px; border-left:3px solid var(--bordeaux); }
+.s-label { font-size:.68rem; color:var(--or); text-transform:uppercase; letter-spacing:.1em; margin-bottom:3px; font-weight:700; }
+.s-val { font-family: Playfair Display, serif; color:#f8d7da; font-size:.95rem; font-weight:700; }
+
+.time-badge {
+  display:inline-flex; align-items:center; gap:8px;
+  background:linear-gradient(135deg,var(--bordeaux),#B03070);
+  color:white; border-radius:40px; padding:10px 22px;
+  font-family: Playfair Display, serif; font-size:1rem; font-style:italic;
+  margin:4px 0 18px;
+  box-shadow:0 4px 14px rgba(139,34,82,.4);
+  animation:pulseGlow 2s ease-in-out infinite;
+}
+@keyframes pulseGlow { 0%,100%{box-shadow:0 4px 14px rgba(139,34,82,.4)} 50%{box-shadow:0 4px 26px rgba(139,34,82,.7)} }
+
+.love-note {
+  font-family: Playfair Display, serif; font-style:italic;
+  color:rgba(242,202,204,.75); font-size:.96rem; line-height:1.7;
+  margin:18px 0; padding:14px 18px;
+  background:rgba(139,34,82,.1); border-radius:12px;
+  border:1px dashed rgba(242,202,204,.25);
+}
+
+/* Confirmation chrono */
+.conf-chrono {
+  background:rgba(201,151,58,.1); border:1px solid rgba(201,151,58,.3);
+  border-radius:14px; padding:14px 18px; margin:18px 0;
+  font-family: Playfair Display, serif; font-size:1.05rem;
+  color:rgba(242,202,204,.85); font-style:italic;
+}
+.conf-chrono strong { color: var(--or); }
+
+.btn-reset {
+  background:transparent; border:1px solid rgba(242,202,204,.4);
+  color:rgba(242,202,204,.7); border-radius:40px; padding:10px 28px;
+  font-family:Lato,sans-serif; font-size:.85rem; cursor:pointer; transition:all .2s; margin-top:18px;
+}
+.btn-reset:hover { background:rgba(242,202,204,.1); color:#f8d7da; }
+
+/* Confetti */
+#confetti-canvas { position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:999; }
+
+.error-msg { color:#e07080; font-size:.8rem; margin-top:6px; display:none; }
+
+@media (max-width:480px) {
+  .form-card, .letter-card { padding:26px 18px; }
+  .summary-grid { grid-template-columns:1fr; }
+  .lock-card { padding:36px 24px; }
+  .code-input { width:44px; height:52px; font-size:1.4rem; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<canvas id="confetti-canvas"></canvas>
+
+<!-- ══════════ LOCK SCREEN ══════════ -->
+<div id="lock-screen">
+  <div class="lock-card">
+    <span class="lock-icon">&#x1F48C;</span>
+    <div class="lock-title">Une surprise t&#8217;attend&#8230;</div>
+    <div class="lock-sub">Entre le code secret pour d&#233;couvrir ta soir&#233;e</div>
+    <div class="code-inputs">
+      <input class="code-input" maxlength="1" id="c0" oninput="onCodeInput(0)" onkeydown="onCodeKey(0,event)" autocomplete="off" spellcheck="false">
+      <input class="code-input" maxlength="1" id="c1" oninput="onCodeInput(1)" onkeydown="onCodeKey(1,event)" autocomplete="off" spellcheck="false">
+      <input class="code-input" maxlength="1" id="c2" oninput="onCodeInput(2)" onkeydown="onCodeKey(2,event)" autocomplete="off" spellcheck="false">
+      <input class="code-input" maxlength="1" id="c3" oninput="onCodeInput(3)" onkeydown="onCodeKey(3,event)" autocomplete="off" spellcheck="false">
+      <input class="code-input" maxlength="1" id="c4" oninput="onCodeInput(4)" onkeydown="onCodeKey(4,event)" autocomplete="off" spellcheck="false">
+      <input class="code-input" maxlength="1" id="c5" oninput="onCodeInput(5)" onkeydown="onCodeKey(5,event)" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="lock-err" id="lock-err">Code incorrect &#x1F494; R&#233;essaie&#8230;</div>
+    <div class="lock-hint">6 lettres &#10024;</div>
+  </div>
+</div>
+
+<!-- ══════════ MAIN APP ══════════ -->
+<div id="main-app">
+
+<header>
+  <p class="eyebrow">Une soir&#233;e rien que pour toi</p>
+  <h1>Bonne f&#234;te, <em>Victoire</em>&nbsp;&#x1F339;</h1>
+  <p class="subtitle">Choisis l&#8217;ambiance qui te fait envie &#8212; je m&#8217;occupe du reste</p>
+  <div class="divider"></div>
+</header>
+
+<!-- CHRONO -->
+<div id="chrono-wrap">
+  <div class="chrono-card">
+    <div class="chrono-icon">&#x23F3;</div>
+    <div class="chrono-text">
+      <div class="chrono-label">Ta soir&#233;e dans&#8230;</div>
+      <div class="chrono-digits" id="chrono-digits">
+        <div class="chrono-unit">
+          <span class="chrono-num" id="c-days">--</span>
+          <span class="chrono-uname">jours</span>
+        </div>
+        <span class="chrono-sep">:</span>
+        <div class="chrono-unit">
+          <span class="chrono-num" id="c-hours">--</span>
+          <span class="chrono-uname">heures</span>
+        </div>
+        <span class="chrono-sep">:</span>
+        <div class="chrono-unit">
+          <span class="chrono-num" id="c-mins">--</span>
+          <span class="chrono-uname">min</span>
+        </div>
+        <span class="chrono-sep">:</span>
+        <div class="chrono-unit">
+          <span class="chrono-num" id="c-secs">--</span>
+          <span class="chrono-uname">sec</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FORM -->
+<div class="card" id="form-section">
+  <div class="form-card">
+    <div class="field">
+      <label>Quelle gastronomie te fait r&#234;ver&nbsp;? <span>Choisis ce qui t&#8217;inspire</span></label>
+      <div class="pills">
+        <div class="pill" data-value="francaise"    onclick="selectPill(this)">&#x1F950; Fran&#231;aise</div>
+        <div class="pill" data-value="japonaise"    onclick="selectPill(this)">&#x1F363; Japonaise</div>
+        <div class="pill" data-value="italienne"    onclick="selectPill(this)">&#x1F35D; Italienne</div>
+        <div class="pill" data-value="libanaise"    onclick="selectPill(this)">&#x1F9C6; Libanaise</div>
+        <div class="pill" data-value="coreenne"     onclick="selectPill(this)">&#x1F962; Cor&#233;enne</div>
+        <div class="pill" data-value="vegetarienne" onclick="selectPill(this)">&#x1F957; V&#233;g&#233;tarienne</div>
+        <div class="pill" data-value="fusion"       onclick="selectPill(this)">&#x2728; Fusion cr&#233;ative</div>
+        <div class="pill" data-value="mexicaine"    onclick="selectPill(this)">&#x1F32E; Mexicaine</div>
+      </div>
+      <p class="error-msg" id="err-cuisine">Dis-moi quelle cuisine te tente &#x1F338;</p>
+      <div class="surprise-box" id="surprise-box">
+        <span class="check-icon">&#x2705;</span>
+        <div class="ok-text">OK, bon choix&nbsp;! &#x1F60D;</div>
+        <div class="ok-sub">Le restaurant sera une surprise&#8230; tu verras, tu vas adorer &#x1F381;</div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Quelle date te convient&nbsp;? <span>Choisis le moment parfait</span></label>
+      <select id="date-select" onchange="onDateChange()">
+        <option value="">&#8212; S&#233;lectionne une date &#8212;</option>
+      </select>
+      <p class="error-msg" id="err-date">Il manque la date, mon amour &#x1F48C;</p>
+    </div>
+    <button class="btn" onclick="doSubmit()">Confirmer ma soir&#233;e d&#8217;anniversaire &#x2728;</button>
+  </div>
+</div>
+
+<!-- CONFIRMATION -->
+<div id="confirmation">
+  <div class="envelope">
+    <div class="env-body">
+      <div class="env-flap"></div>
+      <div class="env-bl"></div>
+      <div class="env-br"></div>
+      <div class="seal">&#x1F495;</div>
+    </div>
+  </div>
+  <div class="letter-card">
+    <span class="heart">&#x1F496;</span>
+    <h2>C&#8217;est not&#233;, Victoire&nbsp;&#x1F339;</h2>
+    <p style="color:rgba(242,202,204,.65);font-size:.93rem;margin-top:8px;">Ta soir&#233;e d&#8217;anniversaire est r&#233;serv&#233;e, rien que pour toi.</p>
+    <div class="summary-grid" id="summary-grid"></div>
+    <div class="time-badge">&#x1F557; Sois pr&#234;te pour 20h &#8212; ce sera le soir &#x1F319;</div>
+    <div class="conf-chrono" id="conf-chrono"></div>
+    <div class="love-note" id="love-note"></div>
+    <p style="color:rgba(242,202,204,.5);font-size:.83rem;font-weight:300;">Le reste&nbsp;? C&#8217;est ma surprise. Plus qu&#8217;&#224; choisir ta plus belle tenue &#x1F339;</p>
+    <br>
+    <button class="btn-reset" onclick="doReset()">&#8592; Modifier ma s&#233;lection</button>
+  </div>
+</div>
+
+</div><!-- /main-app -->
+
+<script>
+// ════════════════════════════════
+// BG CANVAS — étoiles + éléments
+// ════════════════════════════════
+(function() {
+  var canvas = document.getElementById('bg-canvas');
+  var ctx = canvas.getContext('2d');
+  var W, H, particles;
+
+  var EMOJI = ['\uD83D\uDC0E','\uD83C\uDFC6','\uD83C\uDF52','\uD83E\uDD51','\u2B50','\u2728','\uD83C\uDF39','\uD83D\uDCAB'];
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+
+  function randomParticle(forced) {
+    var type = Math.random();
+    if (type < 0.55) {
+      // star
+      return {
+        kind:'star', x:Math.random()*W, y:Math.random()*H,
+        r: Math.random()*1.8+0.4,
+        alpha: Math.random(),
+        speed: Math.random()*0.008+0.003,
+        phase: Math.random()*Math.PI*2,
+        drift: (Math.random()-.5)*0.08
+      };
+    } else if (type < 0.72) {
+      // shooting star
+      return {
+        kind:'shoot',
+        x: Math.random()*W, y: Math.random()*H*0.5,
+        vx: 3+Math.random()*4, vy: 1.5+Math.random()*2,
+        len: 60+Math.random()*80,
+        alpha:1, fade:0.012+Math.random()*0.01
+      };
+    } else {
+      // floating emoji
+      var sz = 14 + Math.random()*14;
+      return {
+        kind:'emoji',
+        emoji: EMOJI[Math.floor(Math.random()*EMOJI.length)],
+        x: Math.random()*W, y: forced ? H+sz : Math.random()*H,
+        vy: -(0.15+Math.random()*0.3),
+        vx: (Math.random()-.5)*0.15,
+        rot: Math.random()*360,
+        vrot: (Math.random()-.5)*0.3,
+        alpha: 0.55+Math.random()*0.3,
+        sz: sz
+      };
+    }
+  }
+
+  function init() {
+    resize();
+    particles = [];
+    for (var i=0; i<90; i++) particles.push(randomParticle(false));
+    // add a few shooting stars
+    for (var j=0; j<6; j++) {
+      var p = randomParticle(false);
+      p.kind = 'shoot';
+      p.x = Math.random()*W; p.y = Math.random()*H*0.6;
+      p.vx = 3+Math.random()*4; p.vy = 1+Math.random()*2;
+      p.len = 60+Math.random()*80; p.alpha=0.4; p.fade=0.003;
+      particles.push(p);
+    }
+  }
+
+  var t = 0;
+  function draw() {
+    requestAnimationFrame(draw);
+    ctx.clearRect(0,0,W,H);
+    t++;
+
+    var toRemove = [];
+    for (var i=0; i<particles.length; i++) {
+      var p = particles[i];
+      if (p.kind === 'star') {
+        p.alpha = 0.3 + 0.7*Math.abs(Math.sin(t*p.speed + p.phase));
+        p.x += p.drift;
+        if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+        ctx.save();
+        ctx.globalAlpha = p.alpha * 0.85;
+        ctx.fillStyle = '#f8d7da';
+        ctx.shadowBlur = 4; ctx.shadowColor = '#f2cacc';
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+        ctx.restore();
+      } else if (p.kind === 'shoot') {
+        p.x += p.vx; p.y += p.vy; p.alpha -= p.fade;
+        if (p.alpha <= 0 || p.x > W+50 || p.y > H+50) {
+          toRemove.push(i); continue;
+        }
+        ctx.save();
+        ctx.globalAlpha = p.alpha;
+        var grad = ctx.createLinearGradient(p.x-p.vx*6, p.y-p.vy*6, p.x, p.y);
+        grad.addColorStop(0,'rgba(248,215,218,0)');
+        grad.addColorStop(1,'rgba(248,215,218,0.9)');
+        ctx.strokeStyle = grad; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(p.x-p.len*0.7, p.y-p.vy/p.vx*p.len*0.7); ctx.lineTo(p.x, p.y);
+        ctx.stroke(); ctx.restore();
+      } else if (p.kind === 'emoji') {
+        p.x += p.vx; p.y += p.vy;
+        p.rot += p.vrot;
+        if (p.y < -40) { toRemove.push(i); continue; }
+        ctx.save();
+        ctx.globalAlpha = p.alpha;
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot * Math.PI/180);
+        ctx.font = p.sz + 'px serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(p.emoji, 0, 0);
+        ctx.restore();
+      }
+    }
+
+    // Remove dead particles
+    for (var k=toRemove.length-1; k>=0; k--) particles.splice(toRemove[k],1);
+
+    // Spawn new shooting stars occasionally
+    if (t % 180 === 0) {
+      particles.push({
+        kind:'shoot', x:0, y:Math.random()*H*0.4,
+        vx:3+Math.random()*3, vy:1+Math.random()*1.5,
+        len:80+Math.random()*60, alpha:0.8, fade:0.008+Math.random()*0.006
+      });
+    }
+
+    // Spawn new emoji
+    if (t % 90 === 0) {
+      var ep = randomParticle(true);
+      ep.kind = 'emoji';
+      ep.x = Math.random()*W; ep.y = H + 30;
+      ep.vy = -(0.2+Math.random()*0.3);
+      particles.push(ep);
+    }
+  }
+
+  window.addEventListener('resize', function(){ resize(); init(); });
+  init();
+  draw();
+})();
+
+// ════════════════════════════════
+// LOCK SCREEN
+// ════════════════════════════════
+var SECRET = 'VICTOI'; // 6 chars, uppercase — hint: VICTOI(RE) mais 6 lettres
+
+function onCodeInput(idx) {
+  var inp = document.getElementById('c'+idx);
+  var v = inp.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+  inp.value = v.slice(-1);
+  if (inp.value) {
+    inp.classList.add('filled');
+    if (idx < 5) document.getElementById('c'+(idx+1)).focus();
+    else checkCode();
+  }
+  clearErr();
+}
+
+function onCodeKey(idx, e) {
+  if (e.key === 'Backspace') {
+    var inp = document.getElementById('c'+idx);
+    if (!inp.value && idx > 0) { document.getElementById('c'+(idx-1)).focus(); }
+    clearErr();
+  }
+}
+
+function getCode() {
+  var s='';
+  for(var i=0;i<6;i++) s += document.getElementById('c'+i).value;
+  return s.toUpperCase();
+}
+
+function clearErr() {
+  document.getElementById('lock-err').style.display='none';
+  document.querySelectorAll('.code-input').forEach(function(el){el.classList.remove('error');});
+}
+
+function checkCode() {
+  var code = getCode();
+  if (code.length < 6) return;
+  if (code === SECRET) {
+    document.getElementById('lock-screen').style.opacity='0';
+    document.getElementById('lock-screen').style.transition='opacity .6s';
+    setTimeout(function(){
+      document.getElementById('lock-screen').style.display='none';
+      document.getElementById('main-app').style.display='block';
+      startChrono();
+      generateDates();
+    }, 600);
+  } else {
+    document.querySelectorAll('.code-input').forEach(function(el){el.classList.add('error');});
+    document.getElementById('lock-err').style.display='block';
+    setTimeout(function(){
+      document.querySelectorAll('.code-input').forEach(function(el){
+        el.classList.remove('error'); el.value=''; el.classList.remove('filled');
+      });
+      document.getElementById('c0').focus();
+    }, 1000);
+  }
+}
+
+// Focus first input on load
+window.addEventListener('load', function(){ document.getElementById('c0').focus(); });
+
+// ════════════════════════════════
+// CHRONO
+// ════════════════════════════════
+var targetDate = null;
+var chronoInterval = null;
+
+function startChrono() {
+  // Default target: 28 juin 2025 à 20h (updated when she picks a date)
+  targetDate = new Date('2025-06-28T20:00:00');
+  updateChrono();
+  chronoInterval = setInterval(updateChrono, 1000);
+}
+
+function updateChrono() {
+  if (!targetDate) return;
+  var now = new Date();
+  var diff = targetDate - now;
+  if (diff <= 0) {
+    document.getElementById('c-days').textContent='00';
+    document.getElementById('c-hours').textContent='00';
+    document.getElementById('c-mins').textContent='00';
+    document.getElementById('c-secs').textContent='00';
+    return;
+  }
+  var days  = Math.floor(diff/86400000);
+  var hours = Math.floor((diff%86400000)/3600000);
+  var mins  = Math.floor((diff%3600000)/60000);
+  var secs  = Math.floor((diff%60000)/1000);
+  document.getElementById('c-days').textContent  = String(days).padStart(2,'0');
+  document.getElementById('c-hours').textContent = String(hours).padStart(2,'0');
+  document.getElementById('c-mins').textContent  = String(mins).padStart(2,'0');
+  document.getElementById('c-secs').textContent  = String(secs).padStart(2,'0');
+}
+
+function onDateChange() {
+  var val = document.getElementById('date-select').value;
+  if (val) {
+    targetDate = new Date(val + 'T20:00:00');
+    updateChrono();
+    document.getElementById('err-date').style.display='none';
+  }
+}
+
+// ════════════════════════════════
+// DATA
+// ════════════════════════════════
+var loveNotes = {
+  francaise:   "Ce soir-l\u00e0, chaque gorg\u00e9e de vin portera un toast \u00e0 toi. La cuisine fran\u00e7aise a ses secrets \u2014 et tu es le mien. \uD83E\uDD42",
+  japonaise:   "L\u2019omakase, c\u2019est \u00ab je te fais confiance \u00bb. Ce soir, je te fais confiance pour tout \u2014 y compris pour \u00eatre la plus belle. \uD83C\uDF38",
+  italienne:   "Les Italiens disent que l\u2019amour se mange. Ce soir, on va bien manger. \uD83C\uDF5D",
+  libanaise:   "La table libanaise n\u2019a pas de fin \u2014 comme mon affection pour toi. Bon app\u00e9tit, habibti. \uD83C\uDF3F",
+  coreenne:    "En cor\u00e9en, on dit \uc0ac\ub791\ud574 pour \u00ab je t\u2019aime \u00bb. Ce soir, le chef le dira \u00e0 sa fa\u00e7on. \uD83E\uDD62",
+  vegetarienne:"La Terre prend soin de nous \u2014 et moi je prends soin de toi. Bonne soir\u00e9e, ma fleur. \uD83C\uDF31",
+  fusion:      "Tu es toi-m\u00eame une fusion de tout ce que j\u2019aime. La soir\u00e9e sera \u00e0 ton image. \u2728",
+  mexicaine:   "Au Mexique, les f\u00eates durent toute la nuit. La tienne aussi m\u00e9rite de durer. \uD83C\uDF3A"
+};
+
+// ════════════════════════════════
+// DATES
+// ════════════════════════════════
+function generateDates() {
+  var select = document.getElementById('date-select');
+  var months = ['janvier','f\u00e9vrier','mars','avril','mai','juin','juillet','ao\u00fbt','septembre','octobre','novembre','d\u00e9cembre'];
+  var dayNames = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+  var fixed = [
+    { value:'2025-06-28', label:'Dimanche 28 juin 2025 \u2014 D\u00eener' },
+    { value:'2025-07-04', label:'Samedi 4 juillet 2025 \u2014 D\u00eener' },
+    { value:'2025-07-05', label:'Dimanche 5 juillet 2025 \u2014 D\u00eener' }
+  ];
+  var sep1 = document.createElement('option');
+  sep1.disabled=true; sep1.textContent='\u2500\u2500 Dates choisies pour toi \u2500\u2500';
+  select.appendChild(sep1);
+  fixed.forEach(function(f){
+    var o=document.createElement('option'); o.value=f.value; o.textContent=f.label;
+    select.appendChild(o);
+  });
+  var sep2=document.createElement('option');
+  sep2.disabled=true; sep2.textContent='\u2500\u2500 Autres disponibilit\u00e9s \u2500\u2500';
+  select.appendChild(sep2);
+  var fv=fixed.map(function(f){return f.value;});
+  var d=new Date(); d.setDate(d.getDate()+1);
+  var count=0;
+  while(count<8){
+    var dow=d.getDay();
+    var iso=d.toISOString().split('T')[0];
+    if(dow>=1&&dow<=4&&fv.indexOf(iso)===-1){
+      var o=document.createElement('option'); o.value=iso;
+      o.textContent=dayNames[dow]+' '+d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear()+' \u2014 D\u00eener';
+      select.appendChild(o); count++;
+    }
+    d.setDate(d.getDate()+1);
+  }
+}
+
+// ════════════════════════════════
+// FORM LOGIC
+// ════════════════════════════════
+var selectedCuisine='';
+
+function selectPill(el){
+  document.querySelectorAll('.pill').forEach(function(p){p.classList.remove('active');});
+  el.classList.add('active');
+  selectedCuisine=el.dataset.value;
+  document.getElementById('err-cuisine').style.display='none';
+  var box=document.getElementById('surprise-box');
+  box.style.display='none'; void box.offsetWidth; box.style.display='block';
+}
+
+function doSubmit(){
+  var ok=true;
+  if(!selectedCuisine){document.getElementById('err-cuisine').style.display='block';ok=false;}
+  var dateVal=document.getElementById('date-select').value;
+  if(!dateVal){document.getElementById('err-date').style.display='block';ok=false;}
+  if(!ok) return;
+  var sel=document.getElementById('date-select');
+  var dateText=sel.options[sel.selectedIndex].text;
+  var label=selectedCuisine.charAt(0).toUpperCase()+selectedCuisine.slice(1);
+  document.getElementById('summary-grid').innerHTML=
+    '<div class="summary-item"><div class="s-label">Gastronomie choisie</div><div class="s-val">'+label+'</div></div>'+
+    '<div class="summary-item"><div class="s-label">Restaurant</div><div class="s-val">\uD83C\uDF81 Surprise\u00a0!</div></div>'+
+    '<div class="summary-item" style="grid-column:1/-1"><div class="s-label">Date &amp; moment</div><div class="s-val">'+dateText+'</div></div>';
+  document.getElementById('love-note').textContent=loveNotes[selectedCuisine]||'';
+
+  // Chrono text dans la confirmation
+  if(targetDate){
+    var now=new Date(); var diff=targetDate-now;
+    if(diff>0){
+      var days=Math.floor(diff/86400000);
+      var hours=Math.floor((diff%86400000)/3600000);
+      var cc='';
+      if(days>0) cc='Plus que <strong>'+days+' jour'+(days>1?'s':'')+'</strong> et <strong>'+hours+'\u00a0h</strong> avant ta soir\u00e9e, Victoire\u00a0!';
+      else if(hours>0) cc='Plus que <strong>'+hours+'\u00a0heure'+(hours>1?'s':'')+'</strong> avant ta soir\u00e9e\u00a0! \uD83E\uDD29';
+      else cc='Ta soir\u00e9e commence dans quelques minutes\u00a0! \uD83C\uDF89';
+      document.getElementById('conf-chrono').innerHTML=cc;
+      document.getElementById('conf-chrono').style.display='block';
+    } else {
+      document.getElementById('conf-chrono').style.display='none';
+    }
+  }
+
+  document.getElementById('form-section').style.display='none';
+  document.getElementById('confirmation').style.display='block';
+  document.getElementById('confirmation').scrollIntoView({behavior:'smooth'});
+  launchConfetti();
+}
+
+function doReset(){
+  selectedCuisine='';
+  document.querySelectorAll('.pill').forEach(function(p){p.classList.remove('active');});
+  document.getElementById('date-select').selectedIndex=0;
+  document.getElementById('surprise-box').style.display='none';
+  document.getElementById('confirmation').style.display='none';
+  document.getElementById('form-section').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ════════════════════════════════
+// CONFETTI
+// ════════════════════════════════
+function launchConfetti(){
+  var canvas=document.getElementById('confetti-canvas');
+  var ctx=canvas.getContext('2d');
+  canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+  var COLORS=['#F2CACC','#8B2252','#C9973A','#F48FB1','#ffffff','#f8bbd0'];
+  var SHAPES=['circle','petal','heart'];
+  var ps=[];
+  for(var i=0;i<160;i++) ps.push({
+    x:Math.random()*canvas.width, y:-10-Math.random()*200,
+    r:4+Math.random()*7, color:COLORS[Math.floor(Math.random()*COLORS.length)],
+    shape:SHAPES[Math.floor(Math.random()*SHAPES.length)],
+    vx:(Math.random()-.5)*2, vy:1.5+Math.random()*2.5,
+    rot:Math.random()*360, vrot:(Math.random()-.5)*4, alpha:1
+  });
+  var frame;
+  (function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    var alive=0;
+    ps.forEach(function(p){
+      p.x+=p.vx; p.y+=p.vy; p.rot+=p.vrot;
+      if(p.y>canvas.height+20) p.alpha-=.018;
+      if(p.alpha<=0) return; alive++;
+      ctx.save(); ctx.globalAlpha=p.alpha; ctx.fillStyle=p.color;
+      ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180);
+      if(p.shape==='circle'){ctx.beginPath();ctx.arc(0,0,p.r,0,Math.PI*2);ctx.fill();}
+      else if(p.shape==='petal'){ctx.beginPath();ctx.ellipse(0,0,p.r*.6,p.r*1.4,0,0,Math.PI*2);ctx.fill();}
+      else{var s=p.r*.7;ctx.beginPath();ctx.moveTo(0,-s*.4);ctx.bezierCurveTo(s,-s*1.2,s*2,s*.5,0,s*1.3);ctx.bezierCurveTo(-s*2,s*.5,-s,-s*1.2,0,-s*.4);ctx.fill();}
+      ctx.restore();
+    });
+    if(alive>0) frame=requestAnimationFrame(draw); else ctx.clearRect(0,0,canvas.width,canvas.height);
+  })();
+}
+</script>
+</body>
+</html>
